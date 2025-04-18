@@ -1,0 +1,80 @@
+// Import Bootstrap
+@import 'bootstrap/scss/bootstrap';
+
+// Custom variables
+$primary-font: 'Montserrat', sans-serif;
+
+// Global styles
+body {
+  font-family: $primary-font;
+  background-color: #f8f9fa;
+}
+
+// Custom component styles
+.card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 0.5rem;
+  border: none;
+  
+  .card-header {
+    border-radius: 0.5rem 0.5rem 0 0;
+    border-bottom: none;
+  }
+}
+
+// Navbar customization
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  .navbar-brand {
+    font-weight: 600;
+  }
+  
+  .nav-link {
+    font-weight: 500;
+    
+    &.active {
+      font-weight: 700;
+    }
+  }
+}
+
+// Form styles
+.form-control {
+  &:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+  }
+}
+
+// Button styles
+.btn {
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  
+  &.btn-primary {
+    box-shadow: 0 2px 4px rgba(13, 110, 253, 0.2);
+    
+    &:hover {
+      box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+    }
+  }
+}
+
+// Alert customization
+.alert {
+  border-radius: 0.5rem;
+}
+
+// Spinner customization
+.spinner-border {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .card {
+    margin-bottom: 1rem;
+  }
+}
