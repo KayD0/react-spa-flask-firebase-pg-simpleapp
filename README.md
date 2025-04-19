@@ -1,313 +1,341 @@
-# React SPA Flask Postgres Simple App
+# YouTube検索・要約アプリケーション
 
-Firebase認証を使用したピュアJSのシンプルなFlaskウェブアプリケーション
+YouTubeビデオを検索し、AI駆動の要約を生成するフルスタックアプリケーションです。React SPAフロントエンド、Flaskバックエンド、PostgreSQLデータベースを使用し、Firebase認証とVertex AI Geminiモデルを統合しています。
+
+![アプリケーションイメージ]()
 
 ## 目次
 
-- [概要](#概要)
-- [主な機能](#主な機能)
+- [機能概要](#機能概要)
 - [技術スタック](#技術スタック)
-- [システムアーキテクチャ](#システムアーキテクチャ)
+- [アーキテクチャ](#アーキテクチャ)
 - [セットアップ手順](#セットアップ手順)
   - [前提条件](#前提条件)
-  - [APIキーの取得](#apiキーの取得)
   - [バックエンドのセットアップ](#バックエンドのセットアップ)
   - [フロントエンドのセットアップ](#フロントエンドのセットアップ)
+  - [APIキーの取得](#apiキーの取得)
+- [アプリケーションの実行](#アプリケーションの実行)
+- [主要機能の使い方](#主要機能の使い方)
 - [開発ガイド](#開発ガイド)
-- [使用方法](#使用方法)
-- [プロジェクト構造](#プロジェクト構造)
+- [デプロイ](#デプロイ)
 - [トラブルシューティング](#トラブルシューティング)
 - [ライセンス](#ライセンス)
 
-## 概要
+## 機能概要
 
-このアプリケーションは、ユーザーがFirebase認証でログインし、YouTubeビデオを検索して、選択したビデオの内容をVertex AI Geminiを使用して要約する機能を提供します。バックエンドはFlaskで実装され、フロントエンドはVanilla JSとBootstrapで構築されています。
+このアプリケーションは以下の主要機能を提供します：
 
-## 主な機能
-
-- **ユーザー認証**: Firebase Authenticationを使用したユーザー登録・ログイン機能
-- **認証トークン検証**: バックエンドでのFirebase IDトークン検証
-- **レスポンシブUI**: モバイルデバイスにも対応したユーザーインターフェース
-- **プロフィール管理**: ユーザープロフィール情報の管理機能
+- **ユーザー認証**: Firebase Authenticationを使用したログイン・登録機能
+- **プロフィール管理**: ユーザープロフィール情報の保存と取得
+- **レスポンシブUI**: モバイルデバイスにも対応したインターフェース
 
 ## 技術スタック
 
 ### フロントエンド
-
-- **HTML/CSS/JavaScript**: 基本的なWeb技術
-- **Bootstrap 5**: UIコンポーネントとレスポンシブデザイン
-- **Vite**: モジュールバンドラー・開発サーバー
-- **Firebase SDK**: 認証とIDトークン管理
-- **SCSS**: スタイリングの拡張機能
+- **React**: UIコンポーネントとステート管理
+- **Vite**: 高速な開発環境とビルドツール
+- **Bootstrap 5**: レスポンシブデザインとUIコンポーネント
+- **Firebase SDK**: クライアントサイド認証
 
 ### バックエンド
-
 - **Python 3.7+**: サーバーサイド言語
 - **Flask**: Webフレームワーク
 - **Blueprint**: モジュール化されたルーティング
 - **Firebase Admin SDK**: IDトークン検証
+- **YouTube Data API v3**: ビデオ検索と情報取得
+- **Vertex AI Gemini**: AI要約生成
 
-### クラウドサービス
+### データベース
+- **PostgreSQL**: ユーザープロフィールとアプリケーションデータの永続化
 
-- **Firebase Authentication**: ユーザー認証
+## アーキテクチャ
+- **フロントエンド**: ユーザーインターフェースを提供し、バックエンドAPIと通信
+- **バックエンド**: ビジネスロジックを処理し、外部APIと通信
+- **データベース**: ユーザーデータと検索履歴を保存
+- **外部サービス**: 認証、ビデオ検索、AI要約生成を提供
 
 ## セットアップ手順
 
 ### 前提条件
 
-- Python 3.7以上
 - Node.js 14以上
-- npm または yarn
-- Google Cloudアカウント
-- Firebaseプロジェクト
-
-
-#### Firebase設定
-
-1. [Firebase Console](https://console.firebase.google.com/)にアクセス
-2. プロジェクトを作成または選択
-3. Authentication機能を有効化し、メール/パスワード認証を設定
-4. プロジェクト設定からWebアプリを追加
-5. 提供されるFirebase設定オブジェクトをコピー
-6. プロジェクト設定 > サービスアカウントから新しい秘密鍵を生成
-
+- Python 3.7以上
+- PostgreSQL 12以上
+- Google Cloud Platform アカウント
+- Firebase プロジェクト
 
 ### バックエンドのセットアップ
 
-1. リポジトリをクローン:
-   ```bash
-   git clone <repository-url>
-   cd <repository-name>
-   ```
+1. backendディレクトリに移動します
+2. 仮想環境を作成して有効化します：
 
-2. バックエンドディレクトリに移動:
-   ```bash
-   cd backend
-   ```
+```bash
+# 仮想環境の作成
+python -m venv venv
 
-3. 仮想環境を作成して有効化:
-   ```bash
-   python -m venv venv
-   # Windows
-   venv\Scripts\activate
-   # macOS/Linux
-   source venv/bin/activate
-   ```
+# Windows
+venv\Scripts\activate
 
-4. 依存関係をインストール:
-   ```bash
-   pip install -r requirements.txt
-   ```
+# macOS/Linux
+source venv/bin/activate
+```
 
-5. `.env.example`をコピーして`.env`ファイルを作成:
-   ```bash
-   cp .env.example .env
-   ```
+3. 必要な依存関係をインストールします：
 
-6. `.env`ファイルを編集し、必要な環境変数を設定:
-   ```
-   # CORS設定
-   CORS_ORIGIN=http://localhost:3000
+```bash
+pip install -r requirements.txt
+```
 
-   # Firebase設定
-   FIREBASE_PROJECT_ID=あなたのfirebaseプロジェクトID
-   FIREBASE_PRIVATE_KEY_ID=あなたのprivate_key_id
-   FIREBASE_PRIVATE_KEY=あなたのprivate_key
-   FIREBASE_CLIENT_EMAIL=あなたのclient_email
-   FIREBASE_CLIENT_ID=あなたのclient_id
-   FIREBASE_AUTH_URI=https://accounts.google.com/o/oauth2/auth
-   FIREBASE_TOKEN_URI=https://oauth2.googleapis.com/token
-   FIREBASE_AUTH_PROVIDER_X509_CERT_URL=https://www.googleapis.com/oauth2/v1/certs
-   FIREBASE_CLIENT_X509_CERT_URL=あなたのclient_x509_cert_url
-   ```
+4. `.env.example`ファイルを基に`.env`ファイルを作成します：
 
-7. バックエンドサーバーを起動:
-   ```bash
-   # Windows
-   python app.py
-   # または
-   setup.bat
+```bash
+cp .env.example .env
+```
 
-   # macOS/Linux
-   python app.py
-   # または
-   ./setup.sh
-   ```
-   サーバーは`http://localhost:5000`で実行されます。
+5. `.env`ファイルを編集し、APIキーと設定を追加します（詳細は[APIキーの取得](#apiキーの取得)セクションを参照）
 
 ### フロントエンドのセットアップ
 
-1. フロントエンドディレクトリに移動:
-   ```bash
-   cd front
-   ```
+1. frontディレクトリに移動します
+2. 依存関係をインストールします：
 
-2. 依存関係をインストール:
-   ```bash
-   npm install
-   # または
-   yarn
-   ```
+```bash
+npm install
+# または
+yarn
+```
 
-3. `.env.example`をコピーして`.env`ファイルを作成:
-   ```bash
-   cp .env.example .env
-   ```
+3. `.env.example`ファイルをコピーして`.env`ファイルを作成します：
 
-4. `.env`ファイルを編集し、Firebase設定を追加:
-   ```
-   VITE_FIREBASE_API_KEY=あなたのapiKey
-   VITE_FIREBASE_AUTH_DOMAIN=あなたのauthDomain
-   VITE_FIREBASE_PROJECT_ID=あなたのprojectId
-   VITE_FIREBASE_STORAGE_BUCKET=あなたのstorageBucket
-   VITE_FIREBASE_MESSAGING_SENDER_ID=あなたのmessagingSenderId
-   VITE_FIREBASE_APP_ID=あなたのappId
-   
-   VITE_API_BASE_URL=http://localhost:5000
-   ```
+```bash
+cp .env.example .env
+```
 
-5. 開発サーバーを起動:
-   ```bash
-   npm run dev
-   # または
-   yarn dev
-   ```
-   フロントエンドは`http://localhost:3000`で実行されます。
+4. `.env`ファイルを編集し、Firebase設定情報とAPIのURLを追加します（詳細は[APIキーの取得](#apiキーの取得)セクションを参照）
+
+### APIキーの取得
+
+#### Firebase認証のセットアップ
+
+1. [Firebase Console](https://console.firebase.google.com/)にアクセスします
+2. 新しいプロジェクトを作成するか、既存のプロジェクトを選択します
+3. Authentication機能を有効化し、メール/パスワード認証を設定します
+4. プロジェクト設定からWebアプリを追加し、Firebase設定情報を取得します
+5. Firebase設定情報をフロントエンドの`.env`ファイルにコピーします
+6. プロジェクト設定 > サービスアカウントに移動します
+7. 「新しい秘密鍵を生成」をクリックしてJSONファイルをダウンロードします
+8. JSONファイルの内容をバックエンドの`.env`ファイルの対応する変数に設定します
+
+#### PostgreSQLのセットアップ
+
+1. PostgreSQLをインストールし、新しいデータベースを作成します
+2. データベース接続情報をバックエンドの`.env`ファイルに追加します：
+
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=youtube_summary
+DB_USER=postgres
+DB_PASSWORD=yourpassword
+```
+
+## アプリケーションの実行
+
+### バックエンドの起動
+
+backendディレクトリで以下のコマンドを実行します：
+
+```bash
+# Windows
+setup.bat
+
+# macOS/Linux
+./setup.sh
+
+# または直接実行
+python app.py
+```
+
+バックエンドサーバーは`http://localhost:5000`で起動します。
+
+### フロントエンドの起動
+
+frontディレクトリで以下のコマンドを実行します：
+
+```bash
+npm run dev
+# または
+yarn dev
+```
+
+フロントエンドアプリケーションは`http://localhost:3000`でアクセスできます。
+
+## 主要機能の使い方
+
+### ユーザー登録とログイン
+
+1. アプリケーションにアクセスし、「登録」ボタンをクリックします
+2. メールアドレスとパスワードを入力して新しいアカウントを作成します
+3. 登録後、自動的にログインされます
+4. 次回からは「ログイン」ページでメールアドレスとパスワードを入力してログインできます
+
+### プロフィール管理
+
+1. 画面右上のユーザーアイコンをクリックし、「プロフィール」を選択します
+2. プロフィール情報（表示名、設定など）を表示・編集できます
+3. 変更後、「保存」ボタンをクリックして更新します
 
 ## 開発ガイド
 
+### プロジェクト構造
+
+```
+react-spa-flask-postgres-app/
+├── LICENSE
+├── README.md
+├── backend/               # Flaskバックエンド
+│   ├── .env.example       # 環境変数のサンプル
+│   ├── app.py             # アプリケーションのエントリーポイント
+│   ├── requirements.txt   # Python依存関係
+│   ├── setup.bat          # Windowsセットアップスクリプト
+│   ├── setup.sh           # Unix/Linuxセットアップスクリプト
+│   ├── controllers/       # ルートハンドラー
+│   ├── models/            # データモデル
+│   └── services/          # ビジネスロジック
+├── front/                 # Reactフロントエンド
+    ├── .env.example       # 環境変数のサンプル
+    ├── index.html         # HTMLエントリーポイント
+    ├── package.json       # npm依存関係
+    ├── vite.config.js     # Vite設定
+    ├── public/            # 静的ファイル
+    └── src/               # ソースコード
+        ├── App.jsx        # メインアプリコンポーネント
+        ├── main.jsx       # Reactエントリーポイント
+        ├── components/    # 再利用可能なコンポーネント
+        ├── contexts/      # Reactコンテキスト
+        ├── css/           # スタイルシート
+        ├── js/            # JavaScriptユーティリティ
+        ├── pages/         # ページコンポーネント
+        └── services/      # APIサービス
+```
+
 ### バックエンド開発
 
-- **コントローラーの追加**:
-  1. `backend/controllers/`に新しいコントローラーファイルを作成
-  2. Blueprintを定義し、ルートを設定
-  3. 必要なサービスをコントローラー内で初期化
-  4. `app.py`でBlueprintを登録
+新しいエンドポイントを追加するには：
 
-- **サービスの追加**:
-  1. `backend/services/`に新しいサービスファイルを作成
-  2. 必要なクラスとメソッドを実装
-  3. コントローラーからサービスをインポートして使用
+1. 適切なコントローラーファイルを選択または新規作成します（`controllers/`ディレクトリ内）
+2. Blueprintにルートを追加します：
 
-- **テスト**:
-  1. `test_api.py`と`test_auth.py`を参考にテストを作成
-  2. `pytest`を使用してテストを実行
+```python
+@blueprint.route('/new-endpoint', methods=['POST'])
+@require_auth
+def new_endpoint():
+    # リクエストデータの取得
+    data = request.get_json()
+    
+    # ビジネスロジックの実行
+    result = some_service.do_something(data)
+    
+    # レスポンスの返却
+    return jsonify(result), 200
+```
+
+3. 必要に応じて新しいサービスを作成します（`services/`ディレクトリ内）
+4. テストを追加します
 
 ### フロントエンド開発
 
-- **コンポーネントの追加**:
-  1. `front/src/js/components/`に新しいコンポーネントファイルを作成
-  2. 必要なHTMLとJavaScriptを実装
-  3. メインアプリケーションからコンポーネントをインポートして使用
+新しいページを追加するには：
 
-- **ビューの追加**:
-  1. `front/src/js/views/`に新しいビューファイルを作成
-  2. ルーターに新しいルートを追加
+1. `src/pages/`ディレクトリに新しいJSXファイルを作成します
+2. 必要なコンポーネントとサービスをインポートします
+3. ページコンポーネントを実装します
+4. `App.jsx`にルートを追加します
 
-- **スタイルの追加**:
-  1. `front/src/css/`にスタイルを追加
-  2. SCSSを使用する場合は`main.scss`に追加
+## デプロイ
 
-## 使用方法
+### バックエンドのデプロイ
 
-1. アプリケーションにアクセス: `http://localhost:3000`
-2. ログインまたは新規ユーザー登録
-3. ホームページでYouTubeビデオを検索
-4. 検索結果から興味のあるビデオを選択
-5. 「要約を生成」ボタンをクリックして要約を取得
-6. プロフィールページでユーザー情報を管理
-7. 認証テストページで認証状態とトークンを確認可能
+バックエンドはHeroku、Google Cloud Run、AWS Elastic Beanstalkなどのサービスにデプロイできます。
 
-## プロジェクト構造
+例：Herokuへのデプロイ
+
+1. Herokuアカウントを作成し、Heroku CLIをインストールします
+2. backendディレクトリに`Procfile`を作成します：
 
 ```
-プロジェクトルート/
-├── backend/                  # バックエンドアプリケーション
-│   ├── controllers/          # Blueprintコントローラー
-│   │   ├── __init__.py
-│   │   ├── auth_controller.py
-│   │   ├── main_controller.py
-│   │   └── profile_controller.py
-│   ├── models/               # データモデル
-│   │   └── user_profile.py
-│   ├── services/             # サービスクラス
-│   │   ├── __init__.py
-│   │   ├── auth_service.py
-│   │   └── db_service.py
-│   ├── app.py                # メインFlaskアプリケーション
-│   ├── requirements.txt      # Pythonの依存関係
-│   ├── setup.bat             # Windowsセットアップスクリプト
-│   ├── setup.sh              # Unix/Linuxセットアップスクリプト
-│   ├── test_api.py           # APIテスト
-│   ├── test_auth.py          # 認証テスト
-│   └── .env.example          # 環境変数のサンプル
-│
-├── front/                    # フロントエンドアプリケーション
-│   ├── src/
-│   │   ├── css/              # スタイルシート
-│   │   │   ├── main.scss     # メインSCSSファイル
-│   │   │   └── style.css     # カスタムスタイル
-│   │   ├── js/               # JavaScriptファイル
-│   │   │   ├── components/   # 再利用可能なコンポーネント
-│   │   │   ├── services/     # APIサービス
-│   │   │   │   ├── auth-api-service.js
-│   │   │   │   ├── firebase.js
-│   │   │   │   └── profile-api-service.js
-│   │   │   ├── utils/        # ユーティリティ関数
-│   │   │   │   └── auth-test.js
-│   │   │   ├── views/        # ページビュー
-│   │   │   │   ├── about.js
-│   │   │   │   ├── auth-test.js
-│   │   │   │   ├── contact.js
-│   │   │   │   ├── home.js
-│   │   │   │   ├── login.js
-│   │   │   │   ├── profile.js
-│   │   │   │   └── register.js
-│   │   │   ├── bootstrap.js  # Bootstrap初期化
-│   │   │   └── main.js       # メインエントリーポイント
-│   ├── public/               # 静的ファイル
-│   │   └── _redirects        # Netlify用リダイレクト設定
-│   ├── etc/                  # その他の設定ファイル
-│   ├── index.html            # メインHTMLファイル
-│   ├── package.json          # npm依存関係
-│   ├── vite.config.js        # Vite設定
-│   └── .env.example          # 環境変数のサンプル
-│
-└── LICENSE                   # ライセンスファイル
+web: gunicorn app:app
 ```
+
+3. 依存関係に`gunicorn`を追加します
+4. Herokuアプリを作成し、デプロイします：
+
+```bash
+heroku create
+git push heroku main
+```
+
+5. 環境変数を設定します：
+
+```bash
+heroku config:set YOUTUBE_API_KEY=your_api_key
+# その他の環境変数も同様に設定
+```
+
+### フロントエンドのデプロイ
+
+フロントエンドはNetlify、Vercel、GitHub Pagesなどのサービスにデプロイできます。
+
+例：Netlifyへのデプロイ
+
+1. frontディレクトリでアプリケーションをビルドします：
+
+```bash
+npm run build
+```
+
+2. Netlifyアカウントを作成します
+3. Netlify CLIをインストールします：
+
+```bash
+npm install -g netlify-cli
+```
+
+4. デプロイします：
+
+```bash
+netlify deploy --prod
+```
+
+5. 環境変数を設定します（Netlifyダッシュボードから）
 
 ## トラブルシューティング
 
-### Firebase認証エラー
+### 一般的な問題と解決策
 
-- **auth/configuration-not-found エラー**:
-  1. `.env`ファイルが正しく設定されているか確認
-  2. Firebase Consoleで認証機能が有効になっているか確認
-  3. ブラウザのキャッシュとCookieをクリア
-  4. 開発サーバーを再起動
+#### バックエンド接続エラー
 
-- **トークン検証エラー**:
-  1. バックエンドとフロントエンドのFirebase設定が同じプロジェクトを指しているか確認
-  2. Firebase Admin SDKの秘密鍵が正しく設定されているか確認
+- バックエンドサーバーが実行されていることを確認
+- CORSが正しく設定されていることを確認
+- 環境変数`VITE_API_BASE_URL`が正しいURLを指していることを確認
 
-### API接続エラー
+#### 認証エラー
 
-- **CORS エラー**:
-  1. バックエンドの`CORS_ORIGIN`設定がフロントエンドのURLと一致しているか確認
-  2. フロントエンドの`VITE_API_BASE_URL`がバックエンドのURLと一致しているか確認
+- Firebase設定が正しいことを確認
+- バックエンドとフロントエンドが同じFirebaseプロジェクトを使用していることを確認
+- IDトークンが正しく取得・検証されていることを確認
 
-- **YouTube API エラー**:
-  1. YouTube Data API v3が有効になっているか確認
-  2. APIキーが正しく設定されているか確認
-  3. APIキーの制限が適切に設定されているか確認
+### ログの確認
 
-### Vertex AI エラー
+問題のトラブルシューティングには、ログを確認することが役立ちます：
 
-- **Geminiモデルエラー**:
-  1. Vertex AI APIが有効になっているか確認
-  2. サービスアカウントに適切な権限があるか確認
-  3. `GOOGLE_APPLICATION_CREDENTIALS`が正しく設定されているか確認
+- **バックエンド**: デバッグモードで実行
+  ```bash
+  python app.py --debug
+  ```
+
+- **フロントエンド**: ブラウザのコンソールでエラーを確認
 
 ## ライセンス
 
-このプロジェクトはMITライセンスの下で公開されています。詳細は[LICENSE](LICENSE)ファイルを参照してください。
+このプロジェクトは[MITライセンス](LICENSE)の下で公開されています。

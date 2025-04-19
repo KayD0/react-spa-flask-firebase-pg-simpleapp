@@ -22,8 +22,6 @@
 
 このバックエンドAPIは以下の主要機能を提供します：
 
-- **YouTube検索**: YouTube Data API v3を使用してビデオを検索
-- **ビデオ要約**: Vertex AI Geminiモデルを使用してビデオ内容の要約を生成
 - **ユーザー認証**: Firebase Admin SDKを使用したIDトークン検証
 - **プロフィール管理**: ユーザープロフィール情報の保存と取得
 - **CORS対応**: フロントエンドとの安全な通信
@@ -34,16 +32,12 @@
 - **Flask**: Webフレームワーク
 - **Blueprint**: モジュール化されたルーティング
 - **Firebase Admin SDK**: IDトークン検証
-- **YouTube Data API v3**: ビデオ検索と情報取得
-- **Vertex AI Gemini**: AI要約生成
 
 ## セットアップ手順
 
 ### 前提条件
 
 - Python 3.7以上
-- YouTube Data API v3が有効なGoogle APIキー
-- Vertex AI APIが有効なGoogle Cloudプロジェクト（ビデオ要約用）
 - Firebase Admin SDK（認証用）
 
 ### インストール
@@ -78,16 +72,8 @@ cp .env.example .env
 6. `.env`ファイルを編集し、APIキーと設定を追加します：
 
 ```
-# YouTube API認証情報
-YOUTUBE_API_KEY=あなたのyoutube_api_keyをここに
-
 # CORS設定
 CORS_ORIGIN=http://localhost:3000
-
-# Google Cloud設定
-GOOGLE_CLOUD_PROJECT=あなたのgoogle_cloudプロジェクトID
-GOOGLE_CLOUD_LOCATION=us-central1
-GEMINI_MODEL_ID=gemini-1.5-pro
 
 # Google Cloud認証情報ファイルを指すように環境変数を設定
 GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/credentials.json
@@ -105,25 +91,6 @@ FIREBASE_CLIENT_X509_CERT_URL=あなたのclient_x509_cert_url
 ```
 
 ### APIキーの取得
-
-#### YouTube APIキー
-
-1. [Google Cloud Console](https://console.cloud.google.com/)にアクセスします
-2. 新しいプロジェクトを作成するか、既存のプロジェクトを選択します
-3. YouTube Data API v3を有効にします
-4. 認証情報（APIキー）を作成します
-5. APIキーを`.env`ファイルにコピーします
-
-#### Google CloudとVertex AIのセットアップ
-
-1. [Google Cloud Console](https://console.cloud.google.com/)にアクセスします
-2. 新しいプロジェクトを作成するか、既存のプロジェクトを選択します
-3. Vertex AI APIを有効にします
-4. 適切な権限を持つサービスアカウントを作成します
-   - 必要な権限: `Vertex AI User`, `Storage Object Viewer`
-5. サービスアカウントキーJSONファイルをダウンロードします
-6. `GOOGLE_APPLICATION_CREDENTIALS`環境変数をこのファイルを指すように設定します
-7. Google CloudプロジェクトIDで`.env`ファイルを更新します
 
 #### Firebase認証のセットアップ
 
