@@ -1,6 +1,6 @@
-# YouTube検索・要約 フロントエンド
+# React SPA フロントエンド
 
-Firebase認証を使用し、YouTubeビデオを検索して要約を生成するシングルページアプリケーション（SPA）のフロントエンドです。バニラJavaScript、Bootstrap 5、Viteを使用して構築されています。
+Firebase認証を使用したシングルページアプリケーション（SPA）のフロントエンドです。React、Vite、Bootstrap 5を使用して構築されています。
 
 ## 目次
 
@@ -23,14 +23,13 @@ Firebase認証を使用し、YouTubeビデオを検索して要約を生成す�
 このフロントエンドアプリケーションは以下の主要機能を提供します：
 
 - **ユーザー認証**: Firebase Authenticationを使用したログイン・登録機能
-- **YouTube検索**: キーワードに基づいてYouTubeビデオを検索
-- **ビデオ要約**: 選択したビデオの内容をVertex AI Geminiで要約
 - **プロフィール管理**: ユーザープロフィール情報の表示と編集
 - **レスポンシブUI**: モバイルデバイスにも対応したインターフェース
 
 ## 技術スタック
 
-- **HTML/CSS/JavaScript**: 基本的なWeb技術
+- **React**: UIライブラリ
+- **JSX**: コンポーネント記述言語
 - **Bootstrap 5**: UIコンポーネントとレスポンシブデザイン
 - **Vite**: モジュールバンドラー・開発サーバー
 - **Firebase SDK**: 認証とIDトークン管理
@@ -43,7 +42,7 @@ Firebase認証を使用し、YouTubeビデオを検索して要約を生成す�
 
 - Node.js 14以上
 - npm または yarn
-- バックエンドAPIサーバー（別リポジトリ）
+- Goバックエンドサーバー（別ディレクトリ）
 - Firebaseプロジェクト
 
 ### インストール
@@ -83,7 +82,7 @@ VITE_FIREBASE_STORAGE_BUCKET=あなたのstorageBucket
 VITE_FIREBASE_MESSAGING_SENDER_ID=あなたのmessagingSenderId
 VITE_FIREBASE_APP_ID=あなたのappId
 
-VITE_API_BASE_URL=http://localhost:5000
+VITE_API_BASE_URL=http://localhost:8080
 ```
 
 ## 開発サーバーの起動
@@ -96,7 +95,7 @@ npm run dev
 yarn dev
 ```
 
-アプリケーションは`http://localhost:3000`でアクセスできます。
+アプリケーションは`http://localhost:5173`でアクセスできます。
 
 ## ビルドと本番デプロイ
 
@@ -129,38 +128,46 @@ front/
 ├── index.html            # エントリーポイント
 ├── vite.config.js        # Vite設定
 ├── package.json          # npm依存関係
+├── package-lock.json     # npm依存関係ロック
 ├── public/               # 静的ファイル
 │   └── _redirects        # Netlify用リダイレクト設定
 ├── etc/                  # その他の設定ファイル
 ├── src/
+│   ├── components/       # 再利用可能なコンポーネント
+│   │   └── NavBar.jsx    # ナビゲーションバー
+│   ├── contexts/         # Reactコンテキスト
+│   │   └── AuthContext.jsx # 認証コンテキスト
 │   ├── css/              # スタイルシート
 │   │   ├── main.scss     # メインSCSSファイル（Bootstrapをインポート）
 │   │   └── style.css     # カスタムスタイル
 │   ├── js/               # JavaScriptファイル
 │   │   ├── bootstrap.js  # Bootstrap JS初期化
-│   │   ├── main.js       # メインエントリーポイント
-│   │   ├── components/   # 再利用可能なコンポーネント
+│   │   ├── main.js       # メインJavaScriptファイル
 │   │   ├── services/     # APIサービス
 │   │   │   ├── auth-api-service.js  # 認証API
 │   │   │   ├── firebase.js          # Firebase初期化
 │   │   │   └── profile-api-service.js # プロフィールAPI
-│   │   ├── utils/        # ユーティリティ関数
-│   │   │   └── auth-test.js # 認証テスト用ユーティリティ
-│   │   └── views/        # ページビュー
-│   │       ├── about.js      # 「About」ページ
-│   │       ├── auth-test.js  # 認証テストページ
-│   │       ├── contact.js    # 「お問い合わせ」ページ
-│   │       ├── home.js       # ホームページ
-│   │       ├── login.js      # ログインページ
-│   │       ├── profile.js    # プロフィールページ
-│   │       └── register.js   # 登録ページ
+│   │   └── utils/        # ユーティリティ関数
+│   │       └── auth-test.js # 認証テスト用ユーティリティ
+│   ├── pages/            # ページコンポーネント
+│   │   ├── AboutPage.jsx     # 「About」ページ
+│   │   ├── AuthTestPage.jsx  # 認証テストページ
+│   │   ├── ContactPage.jsx   # 「お問い合わせ」ページ
+│   │   ├── HomePage.jsx      # ホームページ
+│   │   ├── LoginPage.jsx     # ログインページ
+│   │   ├── ProfilePage.jsx   # プロフィールページ
+│   │   └── RegisterPage.jsx  # 登録ページ
+│   ├── services/         # サービス
+│   │   └── api.js        # API通信
+│   ├── App.jsx           # メインReactコンポーネント
+│   └── main.jsx          # Reactエントリーポイント
 ```
 
 ## 主要コンポーネント
 
 ### 認証システム
 
-`src/js/services/firebase.js`ファイルはFirebase認証を初期化し、以下の機能を提供します：
+`src/contexts/AuthContext.jsx`ファイルはFirebase認証を初期化し、以下の機能を提供します：
 
 - ユーザー登録（メール/パスワード）
 - ログイン/ログアウト
@@ -169,9 +176,9 @@ front/
 
 ### ルーティングシステム
 
-このSPAは簡易的なクライアントサイドルーティングを実装しています：
+このSPAはReactベースのルーティングを実装しています：
 
-- URLハッシュに基づいてビューを切り替え
+- URLパスに基づいてコンポーネントを切り替え
 - 認証状態に基づいたルート保護
 - ページ遷移時のアニメーション
 
@@ -184,56 +191,110 @@ front/
 
 ## 開発ガイド
 
-### 新しいビューの追加
+### 新しいページの追加
 
-1. `src/js/views/`ディレクトリに新しいJSファイルを作成します：
+1. `src/pages/`ディレクトリに新しいJSXファイルを作成します：
 
-```javascript
-// src/js/views/new-view.js
-export default function renderNewView(container) {
-  container.innerHTML = `
-    <div class="container mt-4">
+```jsx
+// src/pages/NewPage.jsx
+import React, { useState } from 'react';
+
+const NewPage = () => {
+  const [data, setData] = useState('');
+  
+  const handleClick = () => {
+    setData('ボタンがクリックされました');
+  };
+  
+  return (
+    <div className="container mt-4">
       <h1>新しいページ</h1>
       <p>ここに内容を記述します。</p>
+      <button 
+        className="btn btn-primary" 
+        onClick={handleClick}
+      >
+        クリック
+      </button>
+      {data && <p className="mt-3">{data}</p>}
     </div>
-  `;
-  
-  // イベントリスナーの追加
-  const someButton = container.querySelector('#some-button');
-  if (someButton) {
-    someButton.addEventListener('click', handleClick);
-  }
-  
-  function handleClick() {
-    // クリックイベントの処理
-    console.log('ボタンがクリックされました');
-  }
-}
+  );
+};
+
+export default NewPage;
 ```
 
-2. `src/js/main.js`にルートを追加します：
+2. `src/App.jsx`にルートを追加します：
 
-```javascript
-import renderNewView from './views/new-view.js';
+```jsx
+import NewPage from './pages/NewPage';
 
-// ルートの定義
-const routes = {
-  // 既存のルート
-  '#/': renderHomeView,
-  '#/login': renderLoginView,
+// App.jsxのルーティング部分
+<Routes>
+  {/* 既存のルート */}
+  <Route path="/" element={<HomePage />} />
+  <Route path="/login" element={<LoginPage />} />
   
-  // 新しいルート
-  '#/new-page': renderNewView
+  {/* 新しいルート */}
+  <Route path="/new-page" element={<NewPage />} />
+</Routes>
+```
+
+### 新しいコンポーネントの追加
+
+1. `src/components/`ディレクトリに新しいJSXファイルを作成します：
+
+```jsx
+// src/components/CustomCard.jsx
+import React from 'react';
+
+const CustomCard = ({ title, content, imageUrl }) => {
+  return (
+    <div className="card mb-4">
+      {imageUrl && (
+        <img src={imageUrl} className="card-img-top" alt={title} />
+      )}
+      <div className="card-body">
+        <h5 className="card-title">{title}</h5>
+        <p className="card-text">{content}</p>
+      </div>
+    </div>
+  );
 };
+
+export default CustomCard;
+```
+
+2. 他のコンポーネントやページからインポートして使用します：
+
+```jsx
+import CustomCard from '../components/CustomCard';
+
+// ページコンポーネント内で使用
+<div className="row">
+  <div className="col-md-4">
+    <CustomCard 
+      title="カード1" 
+      content="これはカード1の内容です。" 
+      imageUrl="/images/card1.jpg" 
+    />
+  </div>
+  <div className="col-md-4">
+    <CustomCard 
+      title="カード2" 
+      content="これはカード2の内容です。" 
+    />
+  </div>
+</div>
 ```
 
 ### 新しいAPIサービスの追加
 
-1. `src/js/services/`ディレクトリに新しいJSファイルを作成します：
+1. `src/services/`ディレクトリに新しいJSファイルを作成します：
 
 ```javascript
-// src/js/services/new-api-service.js
-import { getIdToken } from './firebase.js';
+// src/services/new-api-service.js
+import { getIdToken } from '../js/services/firebase';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -261,20 +322,49 @@ export async function fetchSomeData(params) {
 }
 ```
 
-2. 必要なビューからサービスをインポートして使用します：
+2. Reactコンポーネントからサービスをインポートして使用します：
 
-```javascript
-import { fetchSomeData } from '../services/new-api-service.js';
+```jsx
+import React, { useState, useEffect } from 'react';
+import { fetchSomeData } from '../services/new-api-service';
 
-// ビュー内で使用
-async function handleSubmit() {
-  try {
-    const result = await fetchSomeData({ param1: 'value1' });
-    // 結果を処理
-  } catch (error) {
-    // エラーを処理
-  }
-}
+const DataComponent = () => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const result = await fetchSomeData({ param1: 'value1' });
+      setData(result);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    loadData();
+  }, []);
+  
+  return (
+    <div className="container">
+      {loading && <p>読み込み中...</p>}
+      {error && <p className="text-danger">エラー: {error}</p>}
+      {data && (
+        <div>
+          <h2>データ</h2>
+          <pre>{JSON.stringify(data, null, 2)}</pre>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default DataComponent;
 ```
 
 ### スタイルのカスタマイズ
@@ -349,33 +439,46 @@ $secondary: #ff4081;
 
 1. **バックエンドサーバーが実行されていない**
    - バックエンドサーバーが起動していることを確認
-   - `VITE_API_BASE_URL`が正しいURLを指していることを確認
+   - `VITE_API_BASE_URL`が正しいURLを指していることを確認（`http://localhost:8080`）
 
 2. **CORS設定の問題**
-   - バックエンドのCORS設定がフロントエンドのオリジンを許可していることを確認
+   - バックエンドのCORS設定がフロントエンドのオリジン（`http://localhost:5173`）を許可していることを確認
 
 3. **認証トークンの問題**
    - ユーザーがログインしていることを確認
    - IDトークンが正しく取得されていることを確認
 
-### コンソールでのデバッグ
+### Reactコンポーネントのデバッグ
 
-ブラウザのコンソールで以下の情報を確認することで、問題を特定できます：
+Reactコンポーネントのデバッグには以下の方法が有効です：
 
-- 環境変数が正しく読み込まれているか
-- Firebase初期化エラーメッセージ
-- API呼び出しのエラーメッセージ
-- ネットワークリクエストとレスポンス
+1. **React Developer Tools**
+   - Chromeまたは他のブラウザ用のReact Developer Tools拡張機能をインストール
+   - コンポーネントツリーとprops/stateを検査
 
-```javascript
-// 環境変数のデバッグ
-console.log('API URL:', import.meta.env.VITE_API_BASE_URL);
+2. **console.log**
+   - コンポーネントのレンダリングやライフサイクルをデバッグ
+   ```jsx
+   useEffect(() => {
+     console.log('Component mounted with props:', props);
+     return () => console.log('Component unmounted');
+   }, [props]);
+   ```
 
-// Firebaseのデバッグ
-import { auth } from './services/firebase.js';
-console.log('Firebase Auth:', auth);
-
-// APIリクエストのデバッグ
-fetch(`${import.meta.env.VITE_API_BASE_URL}/api/test`)
-  .then(response => console.log('API Response:', response))
-  .catch(error => console.error('API Error:', error));
+3. **エラーバウンダリ**
+   - エラーバウンダリコンポーネントを作成してエラーをキャッチ
+   ```jsx
+   class ErrorBoundary extends React.Component {
+     state = { hasError: false, error: null };
+     
+     static getDerivedStateFromError(error) {
+       return { hasError: true, error };
+     }
+     
+     render() {
+       if (this.state.hasError) {
+         return <div>エラーが発生しました: {this.state.error.message}</div>;
+       }
+       return this.props.children;
+     }
+   }

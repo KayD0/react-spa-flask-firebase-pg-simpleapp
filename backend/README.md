@@ -156,100 +156,6 @@ Authorization: Bearer <firebase_id_token>
 }
 ```
 
-### 検索エンドポイント
-
-#### POST /api/search
-
-キーワードに基づいてYouTubeビデオを検索します。
-
-**リクエストヘッダー**:
-```
-Authorization: Bearer <firebase_id_token>
-Content-Type: application/json
-```
-
-**リクエストボディ（JSON）**:
-```json
-{
-  "q": "python チュートリアル",
-  "max_results": 5,
-  "channel_id": "UC_x5XG1OV2P6uZZ5FSM9Ttw",
-  "published_after": "2023-01-01T00:00:00Z"
-}
-```
-
-**パラメータ**:
-- `q`: 検索クエリ（必須）
-- `max_results`: 返す結果の最大数（オプション、デフォルト：10）
-- `channel_id`: チャンネルIDでフィルタリング（オプション）
-- `published_after`: この日付以降に公開されたビデオでフィルタリング（オプション、ISO 8601形式）
-
-**レスポンス例**:
-```json
-{
-  "query": "python チュートリアル",
-  "count": 5,
-  "videos": [
-    {
-      "id": "video_id",
-      "title": "Python初心者向けチュートリアル",
-      "description": "この包括的なチュートリアルでPythonプログラミングを学びましょう...",
-      "thumbnail": "https://i.ytimg.com/vi/video_id/mqdefault.jpg",
-      "channel_title": "プログラミングチャンネル",
-      "published_at": "2023-01-01T00:00:00Z",
-      "view_count": "1.2M",
-      "like_count": "45K",
-      "comment_count": "1.5K",
-      "url": "https://www.youtube.com/watch?v=video_id"
-    },
-    // その他のビデオ...
-  ]
-}
-```
-
-### 要約エンドポイント
-
-#### POST /api/summarize
-
-Vertex AI Geminiを使用してYouTubeビデオの要約を生成します。
-
-**リクエストヘッダー**:
-```
-Authorization: Bearer <firebase_id_token>
-Content-Type: application/json
-```
-
-**リクエストボディ（JSON）**:
-```json
-{
-  "video_id": "dQw4w9WgXcQ"
-}
-```
-
-**パラメータ**:
-- `video_id`: YouTubeビデオID（必須）
-
-**レスポンス例**:
-```json
-{
-  "brief_summary": "このビデオは初心者向けのPythonプログラミングの包括的なチュートリアルで、基本的な構文、データ型、制御構造をカバーしています。",
-  "key_points": [
-    "Pythonは高水準のインタープリタ型プログラミング言語です",
-    "変数は明示的な型宣言が不要です",
-    "Pythonは中括弧の代わりにインデントを使用してコードブロックを表します",
-    "この言語にはライブラリとフレームワークの豊富なエコシステムがあります"
-  ],
-  "main_topics": [
-    "Python基礎",
-    "データ型",
-    "制御フロー",
-    "関数"
-  ],
-  "video_id": "dQw4w9WgXcQ",
-  "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-}
-```
-
 ### プロフィールエンドポイント
 
 #### GET /api/profile
@@ -443,29 +349,6 @@ class NewService:
 ## トラブルシューティング
 
 ### 一般的な問題と解決策
-
-#### YouTube API関連のエラー
-
-- **APIキーが無効**:
-  - Google Cloud Consoleで正しいAPIキーを確認
-  - APIキーの制限が適切に設定されているか確認
-  - YouTube Data API v3が有効になっているか確認
-
-- **クォータ超過**:
-  - Google Cloud Consoleでクォータ使用状況を確認
-  - 必要に応じてクォータの増加をリクエスト
-  - リクエスト数を減らすようにアプリケーションを調整
-
-#### Vertex AI関連のエラー
-
-- **認証エラー**:
-  - `GOOGLE_APPLICATION_CREDENTIALS`環境変数が正しく設定されているか確認
-  - サービスアカウントに適切な権限があるか確認
-
-- **モデルエラー**:
-  - Vertex AI APIが有効になっているか確認
-  - モデルIDが正しいか確認（`GEMINI_MODEL_ID`環境変数）
-  - リクエストの形式が正しいか確認
 
 #### Firebase認証エラー
 
