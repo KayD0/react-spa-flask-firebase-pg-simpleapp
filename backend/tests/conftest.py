@@ -25,7 +25,8 @@ def app():
     # アプリケーションコンテキストを設定
     with app.app_context():
         # テスト用のデータベースを作成
-        db.create_all()
+        from setup_db import create_tables
+        create_tables(app)
         yield app
         # テスト用のデータベースをクリア
         db.session.remove()

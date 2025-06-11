@@ -71,10 +71,6 @@ def create_app(config_name=None):
         if not firebase_initialized:
             logger.warning("Firebase Admin SDKの初期化に失敗しました")
         
-        # データベーステーブルの作成
-        db.create_all()
-        logger.info("データベーステーブルが作成されました")
-        
         # アプリケーションの起動ログ
         logger.info(f"アプリケーションが起動しました（環境: {os.getenv('FLASK_ENV', 'development')}）")
     

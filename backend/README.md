@@ -51,6 +51,7 @@ backend/
 ├── requirements.txt        # 依存関係
 ├── run_tests.py            # テスト実行スクリプト
 ├── pytest.ini              # pytest設定ファイル
+├── setup_db.py             # データベースセットアップスクリプト
 ├── setup_dev.py            # 開発環境セットアップスクリプト
 ├── controllers/            # コントローラー（ルートハンドラー）
 │   ├── __init__.py
@@ -131,6 +132,21 @@ cp .env.example .env
 4. プロジェクト設定 > サービスアカウントに移動します
 5. 「新しい秘密鍵を生成」をクリックしてJSONファイルをダウンロードします
 6. JSONファイルの内容を`.env`ファイルの対応する変数に設定します
+
+## データベースのセットアップ
+
+アプリケーションを実行する前に、データベースをセットアップする必要があります：
+
+```bash
+# データベーステーブルの作成
+python setup_db.py
+
+# 既存のテーブルを削除して再作成する場合
+python setup_db.py --drop
+
+# 特定の環境用にデータベースをセットアップ
+python setup_db.py --env production
+```
 
 ## APIの実行
 
