@@ -1,5 +1,10 @@
-from services.db_service import db
+"""
+ユーザープロフィールモデル
+"""
+from typing import Dict, Any, Optional
 from datetime import datetime
+from services.db_service import db
+
 
 class UserProfile(db.Model):
     """
@@ -11,7 +16,7 @@ class UserProfile(db.Model):
     __tablename__ = 'user_profiles'
     
     id = db.Column(db.Integer, primary_key=True)
-    firebase_uid = db.Column(db.String(128), unique=True, nullable=False)
+    firebase_uid = db.Column(db.String(128), unique=True, nullable=False, index=True)
     display_name = db.Column(db.String(100), nullable=True)
     bio = db.Column(db.Text, nullable=True)
     location = db.Column(db.String(100), nullable=True)
@@ -19,15 +24,37 @@ class UserProfile(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    def __init__(self, firebase_uid, display_name=None, bio=None, location=None, website=None):
+    def __init__(
+        self, 
+        firebase_uid: str, 
+        display_name: Optional[str] = None, 
+        bio: Optional[str] = None, 
+        location: Optional[str] = None, 
+        website: Optional[str] = None
+    ) -> None:
+        """
+        ユーザープロフィールの初期化
+        
+        Args:
+            firebase_uid: Firebase認証のユーザーID
+            display_name: 表示名（オプション）
+            bio: 自己紹介（オプション）
+            location: 場所（オプション）
+            website: ウェブサイト（オプション）
+        """
         self.firebase_uid = firebase_uid
         self.display_name = display_name
         self.bio = bio
         self.location = location
         self.website = website
     
-    def to_dict(self):
-        """プロフィールデータを辞書形式で返す"""
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        プロフィールデータを辞書形式で返す
+        
+        Returns:
+            プロフィールデータの辞書
+        """
         return {
             'id': self.id,
             'firebase_uid': self.firebase_uid,
@@ -38,3 +65,31 @@ class UserProfile(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
+    
+    @classmethod
+    def get_by_firebase_uid(cls, firebase_uid: str) -> Optional['UserProfile']:
+        """
+        Firebase UIDでユーザープロフィールを取得する
+        
+        Args:
+            firebase_uid: Firebase認証のユーザーID
+            
+        Returns:
+            ユーザープロフィールまたはNone
+        """
+        return cls.query.filter_by(firebase_uid=firebase_uid).first()
+    
+    def update(self, data: Dict[str, Any]) -> None:
+        """
+        プロフィールデータを更新する
+        
+        Args:
+            data: 更新するデータの辞書
+        """
+        # 更新可能なフィールド
+        updatable_fields = ['display_name', 'bio', 'location', 'website']
+        
+        # 提供されたフィールドを更新
+        for field in updatable_fields:
+            if field in data:
+                setattr(self, field, data[field])

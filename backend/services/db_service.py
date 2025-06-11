@@ -1,27 +1,74 @@
+"""
+データベースサービスモジュール
+"""
+from typing import Any, Optional, List, Dict, Type
 from flask_sqlalchemy import SQLAlchemy
-import os
+from flask import Flask
+from logger import get_logger
+
+# ロガーの取得
+logger = get_logger(__name__)
 
 # SQLAlchemyインスタンスを作成
 db = SQLAlchemy()
 
-def init_db(app):
+def init_db(app: Flask) -> None:
     """
     Flaskアプリケーションにデータベース設定を適用し、SQLAlchemyを初期化します。
     
     Args:
         app: Flaskアプリケーションインスタンス
     """
-    # 環境変数からデータベース接続情報を取得
-    db_host = os.getenv('DB_HOST', 'localhost')
-    db_port = os.getenv('DB_PORT', '5432')
-    db_name = os.getenv('DB_NAME', 'youtubeapp')
-    db_user = os.getenv('DB_USER', 'postgres')
-    db_password = os.getenv('DB_PASSWORD', 'postgres')
-    
-    # SQLAlchemy設定
-    # psycopg3を使用するように接続文字列を更新
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql+psycopg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    
-    # SQLAlchemyをアプリケーションに初期化
+    # 設定はすでにapp.configに適用されているため、
+    # ここではSQLAlchemyの初期化のみを行う
     db.init_app(app)
+    logger.info("データベース接続が初期化されました")
+
+def commit_changes() -> bool:
+    """
+    データベースの変更をコミットする
+    
+    Returns:
+        bool: コミットが成功したかどうか
+    """
+    try:
+        db.session.commit()
+        return True
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"データベースコミットエラー: {str(e)}")
+        return False
+
+def add_to_db(model_instance: Any) -> bool:
+    """
+    モデルインスタンスをデータベースに追加する
+    
+    Args:
+        model_instance: 追加するモデルインスタンス
+        
+    Returns:
+        bool: 追加が成功したかどうか
+    """
+    try:
+        db.session.add(model_instance)
+        return commit_changes()
+    except Exception as e:
+        logger.error(f"データベース追加エラー: {str(e)}")
+        return False
+
+def delete_from_db(model_instance: Any) -> bool:
+    """
+    モデルインスタンスをデータベースから削除する
+    
+    Args:
+        model_instance: 削除するモデルインスタンス
+        
+    Returns:
+        bool: 削除が成功したかどうか
+    """
+    try:
+        db.session.delete(model_instance)
+        return commit_changes()
+    except Exception as e:
+        logger.error(f"データベース削除エラー: {str(e)}")
+        return False

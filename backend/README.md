@@ -1,11 +1,12 @@
-# YouTube検索・要約 バックエンドAPI
+# クリーンアーキテクチャ バックエンドAPI
 
-キーワードを使用してYouTubeビデオを検索し、GoogleのVertex AI Geminiモデルを使用してAI駆動の要約を生成するFlask APIです。Firebase認証を使用してユーザー認証を行い、プロフィール管理機能も提供します。
+Firebase認証を使用したユーザー認証とプロフィール管理機能を提供するFlask APIです。クリーンコードの原則に基づいて設計されています。
 
 ## 目次
 
-- [機能概要](#機能概要)
+- [アーキテクチャ概要](#アーキテクチャ概要)
 - [技術スタック](#技術スタック)
+- [プロジェクト構造](#プロジェクト構造)
 - [セットアップ手順](#セットアップ手順)
   - [前提条件](#前提条件)
   - [インストール](#インストール)
@@ -18,33 +19,79 @@
 - [開発ガイド](#開発ガイド)
 - [トラブルシューティング](#トラブルシューティング)
 
-## 機能概要
+## アーキテクチャ概要
 
-このバックエンドAPIは以下の主要機能を提供します：
+このバックエンドAPIは以下の設計原則に基づいています：
 
-- **ユーザー認証**: Firebase Admin SDKを使用したIDトークン検証
-- **プロフィール管理**: ユーザープロフィール情報の保存と取得
-- **CORS対応**: フロントエンドとの安全な通信
+- **クリーンアーキテクチャ**: 関心事の分離と依存性の方向の制御
+- **SOLID原則**: 単一責任、オープン・クローズド、リスコフの置換、インターフェース分離、依存性逆転の原則
+- **依存性注入**: コンポーネント間の疎結合を実現
+- **型ヒント**: Pythonの型ヒントを使用した静的型チェック
+- **包括的なエラーハンドリング**: 一貫性のあるエラーレスポンス
+- **構造化ロギング**: JSON形式のログ出力
 
 ## 技術スタック
 
 - **Python 3.7+**: サーバーサイド言語
 - **Flask**: Webフレームワーク
-- **Blueprint**: モジュール化されたルーティング
+- **Flask-SQLAlchemy**: ORMとデータベース操作
+- **Marshmallow**: データバリデーション
 - **Firebase Admin SDK**: IDトークン検証
+- **Pytest**: テストフレームワーク
+
+## プロジェクト構造
+
+```
+backend/
+├── app.py                  # アプリケーションのエントリーポイント
+├── config.py               # 設定モジュール
+├── errors.py               # エラーハンドリングモジュール
+├── logger.py               # ロギングモジュール
+├── schemas.py              # バリデーションスキーマ
+├── requirements.txt        # 依存関係
+├── run_tests.py            # テスト実行スクリプト
+├── setup_dev.py            # 開発環境セットアップスクリプト
+├── controllers/            # コントローラー（ルートハンドラー）
+│   ├── __init__.py
+│   ├── auth_controller.py  # 認証関連のエンドポイント
+│   ├── main_controller.py  # 基本エンドポイント
+│   └── profile_controller.py # プロフィール関連のエンドポイント
+├── models/                 # データモデル
+│   └── user_profile.py     # ユーザープロフィールモデル
+├── services/               # ビジネスロジック
+│   ├── __init__.py
+│   ├── auth_service.py     # 認証サービス
+│   └── db_service.py       # データベースサービス
+└── tests/                  # テスト
+    └── test_api.py         # APIエンドポイントのテスト
+```
 
 ## セットアップ手順
 
 ### 前提条件
 
 - Python 3.7以上
+- PostgreSQL（または別のSQLAlchemyがサポートするデータベース）
 - Firebase Admin SDK（認証用）
 
 ### インストール
 
-1. リポジトリをクローンします
-2. backendディレクトリに移動します
-3. 仮想環境を作成して有効化します（推奨）：
+開発環境セットアップスクリプトを使用して簡単にセットアップできます：
+
+```bash
+# セットアップスクリプトを実行
+python setup_dev.py
+
+# 仮想環境をアクティベート
+# Windows
+venv\Scripts\activate
+# macOS/Linux
+source venv/bin/activate
+```
+
+または、手動でセットアップすることもできます：
+
+1. 仮想環境を作成して有効化します：
 
 ```bash
 # 仮想環境の作成
@@ -57,38 +104,19 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-4. 必要な依存関係をインストールします：
+2. 必要な依存関係をインストールします：
 
 ```bash
 pip install -r requirements.txt
 ```
 
-5. `.env.example`ファイルを基に`.env`ファイルを作成します：
+3. `.env.example`ファイルを基に`.env`ファイルを作成します：
 
 ```bash
 cp .env.example .env
 ```
 
-6. `.env`ファイルを編集し、APIキーと設定を追加します：
-
-```
-# CORS設定
-CORS_ORIGIN=http://localhost:3000
-
-# Google Cloud認証情報ファイルを指すように環境変数を設定
-GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/credentials.json
-
-# Firebase設定
-FIREBASE_PROJECT_ID=あなたのfirebaseプロジェクトID
-FIREBASE_PRIVATE_KEY_ID=あなたのprivate_key_id
-FIREBASE_PRIVATE_KEY=あなたのprivate_key
-FIREBASE_CLIENT_EMAIL=あなたのclient_email
-FIREBASE_CLIENT_ID=あなたのclient_id
-FIREBASE_AUTH_URI=https://accounts.google.com/o/oauth2/auth
-FIREBASE_TOKEN_URI=https://oauth2.googleapis.com/token
-FIREBASE_AUTH_PROVIDER_X509_CERT_URL=https://www.googleapis.com/oauth2/v1/certs
-FIREBASE_CLIENT_X509_CERT_URL=あなたのclient_x509_cert_url
-```
+4. `.env`ファイルを編集し、APIキーと設定を追加します。
 
 ### APIキーの取得
 
@@ -108,12 +136,6 @@ Flask開発サーバーを起動します：
 ```bash
 # 直接実行
 python app.py
-
-# または、Windowsの場合
-setup.bat
-
-# または、macOS/Linuxの場合
-./setup.sh
 ```
 
 APIは`http://localhost:5000`で利用可能になります。
@@ -129,7 +151,14 @@ APIが実行中であることを確認するための簡単なメッセージ�
 **レスポンス例**:
 ```json
 {
-  "message": "YouTube Search and Summary API is running"
+  "status": "running",
+  "version": "1.0.0",
+  "message": "ユーザープロフィールAPIが実行中です",
+  "endpoints": {
+    "auth_verify": "/api/auth/verify (Authorizationヘッダーを持つPOST)",
+    "profile_get": "/api/profile (Authorizationヘッダーを持つGET)",
+    "profile_update": "/api/profile (JSONボディとAuthorizationヘッダーを持つPUT)"
+  }
 }
 ```
 
@@ -147,6 +176,31 @@ Authorization: Bearer <firebase_id_token>
 **レスポンス例**:
 ```json
 {
+  "authenticated": true,
+  "user": {
+    "uid": "user_id",
+    "email": "user@example.com",
+    "email_verified": true,
+    "auth_time": 1648123456
+  }
+}
+```
+
+#### POST /api/auth/token
+
+トークンを検証し、有効かどうかを返します。
+
+**リクエストボディ（JSON）**:
+```json
+{
+  "token": "<firebase_id_token>"
+}
+```
+
+**レスポンス例**:
+```json
+{
+  "valid": true,
   "user": {
     "uid": "user_id",
     "email": "user@example.com",
@@ -170,12 +224,16 @@ Authorization: Bearer <firebase_id_token>
 **レスポンス例**:
 ```json
 {
+  "success": true,
   "profile": {
-    "uid": "user_id",
+    "id": 1,
+    "firebase_uid": "user_id",
     "display_name": "ユーザー名",
-    "email": "user@example.com",
+    "bio": "自己紹介",
+    "location": "東京",
+    "website": "https://example.com",
     "created_at": "2023-01-01T00:00:00Z",
-    "last_login": "2023-01-02T00:00:00Z"
+    "updated_at": "2023-01-02T00:00:00Z"
   }
 }
 ```
@@ -194,46 +252,65 @@ Content-Type: application/json
 ```json
 {
   "display_name": "新しいユーザー名",
-  "preferences": {
-    "theme": "dark",
-    "language": "ja"
-  }
+  "bio": "新しい自己紹介",
+  "location": "大阪",
+  "website": "https://new-example.com"
 }
 ```
 
 **レスポンス例**:
 ```json
 {
-  "message": "プロフィールが更新されました",
+  "success": true,
   "profile": {
-    "uid": "user_id",
+    "id": 1,
+    "firebase_uid": "user_id",
     "display_name": "新しいユーザー名",
-    "email": "user@example.com",
-    "preferences": {
-      "theme": "dark",
-      "language": "ja"
-    },
+    "bio": "新しい自己紹介",
+    "location": "大阪",
+    "website": "https://new-example.com",
+    "created_at": "2023-01-01T00:00:00Z",
     "updated_at": "2023-01-03T00:00:00Z"
-  }
+  },
+  "message": "プロフィールが更新されました"
+}
+```
+
+#### DELETE /api/profile
+
+ユーザーのプロフィールを削除します。
+
+**リクエストヘッダー**:
+```
+Authorization: Bearer <firebase_id_token>
+```
+
+**レスポンス例**:
+```json
+{
+  "success": true,
+  "message": "プロフィールが削除されました"
 }
 ```
 
 ## エラーハンドリング
 
-APIは適切なエラーメッセージとステータスコードを返します：
+APIは一貫性のあるエラーレスポンスを返します：
 
-- **400 Bad Request**: 必須パラメータの欠落や無効なパラメータ
+- **400 Bad Request**: 不正なリクエスト
   ```json
   {
-    "error": "必須パラメータ 'q' が欠落しています",
+    "error": "bad_request",
+    "message": "リクエストが不正です",
     "status_code": 400
   }
   ```
 
-- **401 Unauthorized**: 認証エラー（トークンなし、無効なトークン）
+- **401 Unauthorized**: 認証エラー
   ```json
   {
-    "error": "認証が必要です",
+    "error": "unauthorized",
+    "message": "認証が必要です",
     "status_code": 401
   }
   ```
@@ -241,7 +318,8 @@ APIは適切なエラーメッセージとステータスコードを返しま�
 - **403 Forbidden**: 権限エラー
   ```json
   {
-    "error": "このリソースにアクセスする権限がありません",
+    "error": "forbidden",
+    "message": "このリソースにアクセスする権限がありません",
     "status_code": 403
   }
   ```
@@ -249,15 +327,31 @@ APIは適切なエラーメッセージとステータスコードを返しま�
 - **404 Not Found**: リソースが見つからない
   ```json
   {
-    "error": "指定されたリソースが見つかりません",
+    "error": "not_found",
+    "message": "指定されたリソースが見つかりません",
     "status_code": 404
+  }
+  ```
+
+- **422 Unprocessable Entity**: バリデーションエラー
+  ```json
+  {
+    "error": "validation_error",
+    "message": "入力データが無効です",
+    "status_code": 422,
+    "details": {
+      "errors": {
+        "display_name": ["フィールドは必須です"]
+      }
+    }
   }
   ```
 
 - **429 Too Many Requests**: レート制限超過
   ```json
   {
-    "error": "リクエスト制限を超えました。しばらく待ってから再試行してください",
+    "error": "rate_limit_exceeded",
+    "message": "リクエスト制限を超えました。しばらく待ってから再試行してください",
     "status_code": 429
   }
   ```
@@ -265,7 +359,8 @@ APIは適切なエラーメッセージとステータスコードを返しま�
 - **500 Internal Server Error**: サーバーエラー
   ```json
   {
-    "error": "内部サーバーエラーが発生しました",
+    "error": "internal_error",
+    "message": "内部サーバーエラーが発生しました",
     "status_code": 500
   }
   ```
@@ -276,26 +371,22 @@ APIは適切なエラーメッセージとステータスコードを返しま�
 
 ```bash
 # すべてのテストを実行
-pytest
+python run_tests.py
 
-# 特定のテストファイルを実行
-pytest test_api.py
-pytest test_auth.py
+# または、pytestを直接使用
+pytest tests/
 ```
 
 テストファイルの概要：
 
-- **test_api.py**: API機能のテスト（検索、要約など）
-- **test_auth.py**: 認証機能のテスト（トークン検証など）
+- **tests/test_api.py**: APIエンドポイントのテスト
 
 ## フロントエンド連携
 
 このAPIは付属のフロントエンドアプリケーションと連携するように設計されています。フロントエンドには以下が含まれます：
 
-1. カードレイアウトで結果を表示するYouTubeビデオ検索コンポーネント
-2. Vertex AI Geminiを使用して要約を生成するビデオ要約コンポーネント
-3. Firebase認証を使用したユーザー認証システム
-4. ユーザープロフィール管理機能
+1. Firebase認証を使用したユーザー認証システム
+2. ユーザープロフィール管理機能
 
 フロントエンドを実行するには：
 
@@ -313,38 +404,59 @@ pytest test_auth.py
 
 ```python
 @blueprint.route('/new-endpoint', methods=['POST'])
-@require_auth
+@auth_required
 def new_endpoint():
-    # リクエストデータの取得
+    """エンドポイントの説明"""
+    # リクエストデータの取得と検証
     data = request.get_json()
+    validated_data = SomeSchema.validate_request(data)
     
     # ビジネスロジックの実行
-    result = some_service.do_something(data)
+    result = some_service_function(validated_data)
     
     # レスポンスの返却
-    return jsonify(result), 200
+    return jsonify({
+        'success': True,
+        'data': result
+    }), 200
 ```
 
 3. 必要に応じて新しいサービスを作成します（`services/`ディレクトリ内）
-4. テストを追加します
+4. テストを追加します（`tests/`ディレクトリ内）
 
-### 新しいサービスの追加
+### 新しいモデルの追加
 
-1. `services/`ディレクトリに新しいPythonファイルを作成します
-2. サービスクラスまたは関数を実装します：
+1. `models/`ディレクトリに新しいPythonファイルを作成します
+2. モデルクラスを実装します：
 
 ```python
-class NewService:
-    def __init__(self, config):
-        self.config = config
-        # 初期化コード
+from typing import Dict, Any, Optional
+from datetime import datetime
+from services.db_service import db
+
+class NewModel(db.Model):
+    """新しいモデルの説明"""
+    __tablename__ = 'new_models'
     
-    def do_something(self, data):
-        # ビジネスロジックの実装
-        return result
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __init__(self, name: str) -> None:
+        """初期化"""
+        self.name = name
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """辞書形式に変換"""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
 ```
 
-3. コントローラーからサービスをインポートして使用します
+3. 対応するスキーマを`schemas.py`に追加します
+4. 必要に応じてサービス関数を作成します
 
 ## トラブルシューティング
 
@@ -360,6 +472,15 @@ class NewService:
   - ユーザーに必要な権限があるか確認
   - Firebaseルールが適切に設定されているか確認
 
+#### データベース関連のエラー
+
+- **接続エラー**:
+  - データベース接続情報が正しいか確認
+  - データベースサーバーが実行中か確認
+
+- **マイグレーションエラー**:
+  - データベーススキーマが最新か確認
+
 #### CORS関連のエラー
 
 - **CORSエラー**:
@@ -371,8 +492,11 @@ class NewService:
 問題のトラブルシューティングには、ログを確認することが役立ちます：
 
 ```bash
-# アプリケーションを詳細なログモードで実行
-python app.py --debug
+# 環境変数でログレベルを設定
+export LOG_LEVEL=DEBUG
+
+# アプリケーションを実行
+python app.py
 ```
 
 また、特定のエンドポイントをcurlコマンドで直接テストすることも有効です：
@@ -385,5 +509,4 @@ curl http://localhost:5000/
 curl -X POST \
   -H "Authorization: Bearer YOUR_ID_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"q":"python tutorial"}' \
-  http://localhost:5000/api/search
+  http://localhost:5000/api/profile

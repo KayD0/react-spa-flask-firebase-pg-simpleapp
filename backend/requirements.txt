@@ -1,11 +1,33 @@
+# Webフレームワーク
 Flask==2.3.3
 Flask-CORS==4.0.0
-google-api-python-client==2.97.0
-google-cloud-aiplatform==1.38.1
-python-dotenv==1.1.0
-requests==2.31.0
-youtube-transcript-api==0.6.1
-firebase-admin==6.2.0
+Werkzeug==2.3.7
+
+# データベース
 Flask-SQLAlchemy==3.1.1
 psycopg==3.2.2
 psycopg-binary==3.2.2
+
+# 認証
+firebase-admin==6.2.0
+
+# API連携
+google-api-python-client==2.97.0
+google-cloud-aiplatform==1.38.1
+requests==2.31.0
+youtube-transcript-api==0.6.1
+
+# 設定と環境変数
+python-dotenv==1.1.0
+
+# バリデーション
+marshmallow==3.20.1
+
+# テスト
+pytest==7.4.0
+pytest-cov==4.1.0
+
+# 開発ツール
+black==23.7.0
+flake8==6.1.0
+isort==5.12.0
