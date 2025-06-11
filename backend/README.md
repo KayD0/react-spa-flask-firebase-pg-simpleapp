@@ -50,6 +50,7 @@ backend/
 ├── schemas.py              # バリデーションスキーマ
 ├── requirements.txt        # 依存関係
 ├── run_tests.py            # テスト実行スクリプト
+├── pytest.ini              # pytest設定ファイル
 ├── setup_dev.py            # 開発環境セットアップスクリプト
 ├── controllers/            # コントローラー（ルートハンドラー）
 │   ├── __init__.py
@@ -63,7 +64,9 @@ backend/
 │   ├── auth_service.py     # 認証サービス
 │   └── db_service.py       # データベースサービス
 └── tests/                  # テスト
-    └── test_api.py         # APIエンドポイントのテスト
+    ├── conftest.py         # pytestフィクスチャ
+    ├── test_api.py         # APIエンドポイントのテスト
+    └── test_auth_integration.py # 認証統合テスト
 ```
 
 ## セットアップ手順
@@ -367,19 +370,64 @@ APIは一貫性のあるエラーレスポンスを返します：
 
 ## テスト
 
-このプロジェクトには自動テストが含まれています：
+このプロジェクトはpytestを使用して自動テストを実行します：
+
+```bash
+# すべてのテストを実行（統合テストを除く）
+python run_tests.py
+
+# 特定のテストファイルを実行
+python run_tests.py tests/test_api.py
+
+# 統合テストを含むすべてのテストを実行
+python run_tests.py -m "integration or not integration"
+
+# カバレッジレポートを生成
+python run_tests.py --cov=. --cov-report=html
+```
+
+pytestを直接使用することもできます：
 
 ```bash
 # すべてのテストを実行
-python run_tests.py
+pytest
 
-# または、pytestを直接使用
-pytest tests/
+# 詳細な出力で実行
+pytest -v
+
+# 特定のテストファイルを実行
+pytest tests/test_api.py
+
+# 特定のテスト関数を実行
+pytest tests/test_api.py::test_index_route
+
+# 統合テストのみを実行
+pytest -m integration
+
+# 統合テスト以外を実行
+pytest -m "not integration"
 ```
 
 テストファイルの概要：
 
-- **tests/test_api.py**: APIエンドポイントのテスト
+- **tests/conftest.py**: テスト用のフィクスチャとヘルパー関数
+- **tests/test_api.py**: APIエンドポイントの単体テスト
+- **tests/test_auth_integration.py**: 認証機能の統合テスト（実際のAPIエンドポイントに対するテスト）
+
+### テストカバレッジ
+
+テストカバレッジレポートを生成するには：
+
+```bash
+# カバレッジレポートを生成（HTMLとターミナル出力）
+pytest --cov=. --cov-report=html --cov-report=term
+
+# カバレッジレポートを表示
+# Windowsの場合
+start htmlcov/index.html
+# macOS/Linuxの場合
+open htmlcov/index.html
+```
 
 ## フロントエンド連携
 

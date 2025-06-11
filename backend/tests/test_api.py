@@ -1,70 +1,30 @@
 """
-APIエンドポイントのユニットテスト
+APIエンドポイントのpytestによるテスト
 """
-import os
-import sys
-import unittest
 import json
 from unittest.mock import patch, MagicMock
 
-# テスト対象のアプリケーションをインポートできるようにパスを追加
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import pytest
 
-from app import create_app
-from services.db_service import db
 from models.user_profile import UserProfile
 
 
-class BaseTestCase(unittest.TestCase):
-    """テストケースの基底クラス"""
+def test_index_route(client):
+    """インデックスルートのテスト"""
+    response = client.get('/')
+    data = json.loads(response.data)
     
-    def setUp(self):
-        """各テストの前に実行"""
-        # テスト用の設定でアプリケーションを作成
-        self.app = create_app()
-        self.app.config['TESTING'] = True
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-        self.app.config['WTF_CSRF_ENABLED'] = False
-        
-        # テスト用のクライアントを作成
-        self.client = self.app.test_client()
-        
-        # アプリケーションコンテキストを設定
-        self.app_context = self.app.app_context()
-        self.app_context.push()
-        
-        # テスト用のデータベースを作成
-        db.create_all()
-    
-    def tearDown(self):
-        """各テストの後に実行"""
-        # テスト用のデータベースをクリア
-        db.session.remove()
-        db.drop_all()
-        
-        # アプリケーションコンテキストを解放
-        self.app_context.pop()
+    assert response.status_code == 200
+    assert data['status'] == 'running'
+    assert 'message' in data
+    assert 'endpoints' in data
 
 
-class MainRoutesTestCase(BaseTestCase):
-    """メインルートのテスト"""
-    
-    def test_index_route(self):
-        """インデックスルートのテスト"""
-        response = self.client.get('/')
-        data = json.loads(response.data)
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(data['status'], 'running')
-        self.assertIn('message', data)
-        self.assertIn('endpoints', data)
-
-
-class AuthRoutesTestCase(BaseTestCase):
+class TestAuthRoutes:
     """認証ルートのテスト"""
     
     @patch('services.auth_service.verify_token')
-    def test_verify_auth_success(self, mock_verify_token):
+    def test_verify_auth_success(self, mock_verify_token, client):
         """認証検証の成功テスト"""
         # モックの設定
         mock_user = {
@@ -76,27 +36,27 @@ class AuthRoutesTestCase(BaseTestCase):
         mock_verify_token.return_value = mock_user
         
         # テスト
-        response = self.client.post(
+        response = client.post(
             '/api/auth/verify',
             headers={'Authorization': 'Bearer test-token'}
         )
         data = json.loads(response.data)
         
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(data['authenticated'])
-        self.assertEqual(data['user']['uid'], 'test-user-id')
-        self.assertEqual(data['user']['email'], 'test@example.com')
+        assert response.status_code == 200
+        assert data['authenticated'] is True
+        assert data['user']['uid'] == 'test-user-id'
+        assert data['user']['email'] == 'test@example.com'
     
-    def test_verify_auth_no_token(self):
+    def test_verify_auth_no_token(self, client):
         """認証トークンなしのテスト"""
-        response = self.client.post('/api/auth/verify')
+        response = client.post('/api/auth/verify')
         data = json.loads(response.data)
         
-        self.assertEqual(response.status_code, 401)
-        self.assertEqual(data['error'], 'unauthorized')
+        assert response.status_code == 401
+        assert data['error'] == 'unauthorized'
     
     @patch('services.auth_service.verify_token')
-    def test_check_token_success(self, mock_verify_token):
+    def test_check_token_success(self, mock_verify_token, client):
         """トークン検証の成功テスト"""
         # モックの設定
         mock_user = {
@@ -108,84 +68,72 @@ class AuthRoutesTestCase(BaseTestCase):
         mock_verify_token.return_value = mock_user
         
         # テスト
-        response = self.client.post(
+        response = client.post(
             '/api/auth/token',
             json={'token': 'test-token'}
         )
         data = json.loads(response.data)
         
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(data['valid'])
-        self.assertEqual(data['user']['uid'], 'test-user-id')
+        assert response.status_code == 200
+        assert data['valid'] is True
+        assert data['user']['uid'] == 'test-user-id'
     
-    def test_check_token_no_token(self):
+    def test_check_token_no_token(self, client):
         """トークンなしのテスト"""
-        response = self.client.post('/api/auth/token', json={})
+        response = client.post('/api/auth/token', json={})
         data = json.loads(response.data)
         
-        self.assertEqual(response.status_code, 401)
-        self.assertEqual(data['error'], 'unauthorized')
+        assert response.status_code == 401
+        assert data['error'] == 'unauthorized'
 
 
-class ProfileRoutesTestCase(BaseTestCase):
+class TestProfileRoutes:
     """プロフィールルートのテスト"""
     
     @patch('services.auth_service.get_user_id_from_token')
-    def test_get_profile_new_user(self, mock_get_user_id):
+    def test_get_profile_new_user(self, mock_get_user_id, client, auth_headers):
         """新規ユーザーのプロフィール取得テスト"""
         # モックの設定
         mock_get_user_id.return_value = 'test-user-id'
         
         # テスト
-        response = self.client.get(
-            '/api/profile',
-            headers={'Authorization': 'Bearer test-token'}
-        )
+        response = client.get('/api/profile', headers=auth_headers)
         data = json.loads(response.data)
         
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(data['success'])
-        self.assertEqual(data['profile']['firebase_uid'], 'test-user-id')
-        self.assertIn('message', data)
+        assert response.status_code == 200
+        assert data['success'] is True
+        assert data['profile']['firebase_uid'] == 'test-user-id'
+        assert 'message' in data
     
     @patch('services.auth_service.get_user_id_from_token')
-    def test_get_profile_existing_user(self, mock_get_user_id):
+    def test_get_profile_existing_user(self, mock_get_user_id, client, auth_headers, create_test_profile):
         """既存ユーザーのプロフィール取得テスト"""
         # モックの設定
         mock_get_user_id.return_value = 'test-user-id'
         
         # テスト用のプロフィールを作成
-        profile = UserProfile(
-            firebase_uid='test-user-id',
-            display_name='Test User',
-            bio='Test bio'
-        )
-        db.session.add(profile)
-        db.session.commit()
+        create_test_profile()
         
         # テスト
-        response = self.client.get(
-            '/api/profile',
-            headers={'Authorization': 'Bearer test-token'}
-        )
+        response = client.get('/api/profile', headers=auth_headers)
         data = json.loads(response.data)
         
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(data['success'])
-        self.assertEqual(data['profile']['firebase_uid'], 'test-user-id')
-        self.assertEqual(data['profile']['display_name'], 'Test User')
-        self.assertEqual(data['profile']['bio'], 'Test bio')
+        assert response.status_code == 200
+        assert data['success'] is True
+        assert data['profile']['firebase_uid'] == 'test-user-id'
+        assert data['profile']['display_name'] == 'Test User'
+        assert data['profile']['bio'] == 'Test bio'
     
     @patch('services.auth_service.get_user_id_from_token')
-    def test_update_profile_new_user(self, mock_get_user_id):
+    def test_update_profile_new_user(self, mock_get_user_id, client, auth_headers):
         """新規ユーザーのプロフィール更新テスト"""
         # モックの設定
         mock_get_user_id.return_value = 'test-user-id'
         
         # テスト
-        response = self.client.put(
+        response = client.put(
             '/api/profile',
-            headers={'Authorization': 'Bearer test-token'},
+            headers=auth_headers,
             json={
                 'display_name': 'Updated Name',
                 'bio': 'Updated bio',
@@ -195,33 +143,27 @@ class ProfileRoutesTestCase(BaseTestCase):
         )
         data = json.loads(response.data)
         
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(data['success'])
-        self.assertEqual(data['profile']['firebase_uid'], 'test-user-id')
-        self.assertEqual(data['profile']['display_name'], 'Updated Name')
-        self.assertEqual(data['profile']['bio'], 'Updated bio')
-        self.assertEqual(data['profile']['location'], 'Tokyo')
-        self.assertEqual(data['profile']['website'], 'https://example.com')
+        assert response.status_code == 200
+        assert data['success'] is True
+        assert data['profile']['firebase_uid'] == 'test-user-id'
+        assert data['profile']['display_name'] == 'Updated Name'
+        assert data['profile']['bio'] == 'Updated bio'
+        assert data['profile']['location'] == 'Tokyo'
+        assert data['profile']['website'] == 'https://example.com'
     
     @patch('services.auth_service.get_user_id_from_token')
-    def test_update_profile_existing_user(self, mock_get_user_id):
+    def test_update_profile_existing_user(self, mock_get_user_id, client, auth_headers, create_test_profile):
         """既存ユーザーのプロフィール更新テスト"""
         # モックの設定
         mock_get_user_id.return_value = 'test-user-id'
         
         # テスト用のプロフィールを作成
-        profile = UserProfile(
-            firebase_uid='test-user-id',
-            display_name='Test User',
-            bio='Test bio'
-        )
-        db.session.add(profile)
-        db.session.commit()
+        create_test_profile()
         
         # テスト
-        response = self.client.put(
+        response = client.put(
             '/api/profile',
-            headers={'Authorization': 'Bearer test-token'},
+            headers=auth_headers,
             json={
                 'display_name': 'Updated Name',
                 'location': 'Tokyo'
@@ -229,58 +171,43 @@ class ProfileRoutesTestCase(BaseTestCase):
         )
         data = json.loads(response.data)
         
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(data['success'])
-        self.assertEqual(data['profile']['firebase_uid'], 'test-user-id')
-        self.assertEqual(data['profile']['display_name'], 'Updated Name')
-        self.assertEqual(data['profile']['bio'], 'Test bio')  # 更新されていないフィールド
-        self.assertEqual(data['profile']['location'], 'Tokyo')
+        assert response.status_code == 200
+        assert data['success'] is True
+        assert data['profile']['firebase_uid'] == 'test-user-id'
+        assert data['profile']['display_name'] == 'Updated Name'
+        assert data['profile']['bio'] == 'Test bio'  # 更新されていないフィールド
+        assert data['profile']['location'] == 'Tokyo'
     
     @patch('services.auth_service.get_user_id_from_token')
-    def test_delete_profile(self, mock_get_user_id):
+    def test_delete_profile(self, mock_get_user_id, client, auth_headers, create_test_profile, app):
         """プロフィール削除テスト"""
         # モックの設定
         mock_get_user_id.return_value = 'test-user-id'
         
         # テスト用のプロフィールを作成
-        profile = UserProfile(
-            firebase_uid='test-user-id',
-            display_name='Test User'
-        )
-        db.session.add(profile)
-        db.session.commit()
+        create_test_profile()
         
         # テスト
-        response = self.client.delete(
-            '/api/profile',
-            headers={'Authorization': 'Bearer test-token'}
-        )
+        response = client.delete('/api/profile', headers=auth_headers)
         data = json.loads(response.data)
         
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(data['success'])
-        self.assertIn('message', data)
+        assert response.status_code == 200
+        assert data['success'] is True
+        assert 'message' in data
         
         # プロフィールが削除されたことを確認
         profile = UserProfile.query.filter_by(firebase_uid='test-user-id').first()
-        self.assertIsNone(profile)
+        assert profile is None
     
     @patch('services.auth_service.get_user_id_from_token')
-    def test_delete_profile_not_found(self, mock_get_user_id):
+    def test_delete_profile_not_found(self, mock_get_user_id, client, auth_headers):
         """存在しないプロフィールの削除テスト"""
         # モックの設定
         mock_get_user_id.return_value = 'test-user-id'
         
         # テスト
-        response = self.client.delete(
-            '/api/profile',
-            headers={'Authorization': 'Bearer test-token'}
-        )
+        response = client.delete('/api/profile', headers=auth_headers)
         data = json.loads(response.data)
         
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(data['error'], 'not_found')
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert response.status_code == 404
+        assert data['error'] == 'not_found'

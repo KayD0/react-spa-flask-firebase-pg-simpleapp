@@ -1,25 +1,21 @@
 """
-テスト実行スクリプト
+pytestを使用したテスト実行スクリプト
 """
-import unittest
 import sys
-import os
-
-# テストディレクトリをインポートパスに追加
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+import pytest
 
 def run_tests():
-    """すべてのテストを実行する"""
-    # テストディレクトリからすべてのテストを検出
-    test_loader = unittest.TestLoader()
-    test_suite = test_loader.discover('tests', pattern='test_*.py')
+    """pytestを使用してすべてのテストを実行する"""
+    # コマンドライン引数をpytestに渡す
+    args = sys.argv[1:] if len(sys.argv) > 1 else []
     
-    # テストを実行
-    test_runner = unittest.TextTestRunner(verbosity=2)
-    result = test_runner.run(test_suite)
+    # 統合テストを除外するデフォルト設定（-mオプションが指定されていない場合）
+    if not any(arg.startswith('-m') for arg in args):
+        args.append('-m')
+        args.append('not integration')
     
-    # 結果に基づいて終了コードを設定
-    return 0 if result.wasSuccessful() else 1
+    # pytestを実行
+    return pytest.main(args)
 
 if __name__ == '__main__':
     sys.exit(run_tests())
